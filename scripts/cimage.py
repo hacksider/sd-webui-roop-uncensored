@@ -1,6 +1,3 @@
-import tempfile
-from ifnude import detect
-
 def convert_to_sd(img):
     shapes = []
     chunks = detect(img)
