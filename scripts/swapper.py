@@ -95,9 +95,7 @@ class ImageResult:
     similarity: Union[Dict[int, float], None] = None  # face, 0..1
 
     def image(self) -> Union[Image.Image, None]:
-        if self.path:
-            return Image.open(self.path)
-        return None
+        return Image.open(self.path) if self.path else None
 
 
 def swap_face(
