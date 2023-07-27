@@ -30,7 +30,7 @@ def get_models():
 
 class FaceSwapScript(scripts.Script):
     def title(self):
-        return f"roop"
+        return "roop"
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
@@ -107,17 +107,25 @@ class FaceSwapScript(scripts.Script):
 
     @property
     def upscaler(self) -> UpscalerData:
-        for upscaler in shared.sd_upscalers:
-            if upscaler.name == self.upscaler_name:
-                return upscaler
-        return None
+        return next(
+            (
+                upscaler
+                for upscaler in shared.sd_upscalers
+                if upscaler.name == self.upscaler_name
+            ),
+            None,
+        )
 
     @property
     def face_restorer(self) -> FaceRestoration:
-        for face_restorer in shared.face_restorers:
-            if face_restorer.name() == self.face_restorer_name:
-                return face_restorer
-        return None
+        return next(
+            (
+                face_restorer
+                for face_restorer in shared.face_restorers
+                if face_restorer.name() == self.face_restorer_name
+            ),
+            None,
+        )
 
     @property
     def upscale_options(self) -> UpscaleOptions:
@@ -156,25 +164,25 @@ class FaceSwapScript(scripts.Script):
         self.faces_index = {
             int(x) for x in faces_index.strip(",").split(",") if x.isnumeric()
         }
-        if len(self.faces_index) == 0:
+        if not self.faces_index:
             self.faces_index = {0}
         if self.enable:
-            if self.source is not None:
-                if isinstance(p, StableDiffusionProcessingImg2Img) and swap_in_source:
-                    logger.info(f"roop enabled, face index %s", self.faces_index)
+            if self.source is None:
+                logger.error("Please provide a source face")
 
-                    for i in range(len(p.init_images)):
-                        logger.info(f"Swap in source %s", i)
-                        result = swap_face(
-                            self.source,
-                            p.init_images[i],
-                            faces_index=self.faces_index,
-                            model=self.model,
-                            upscale_options=self.upscale_options,
-                        )
-                        p.init_images[i] = result.image()
-            else:
-                logger.error(f"Please provide a source face")
+            elif isinstance(p, StableDiffusionProcessingImg2Img) and swap_in_source:
+                logger.info("roop enabled, face index %s", self.faces_index)
+
+                for i in range(len(p.init_images)):
+                    logger.info("Swap in source %s", i)
+                    result = swap_face(
+                        self.source,
+                        p.init_images[i],
+                        faces_index=self.faces_index,
+                        model=self.model,
+                        upscale_options=self.upscale_options,
+                    )
+                    p.init_images[i] = result.image()
 
     def postprocess_batch(self, p, *args, **kwargs):
         if self.enable:
